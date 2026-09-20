@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ja" class="h-full bg-black text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Flow Reader - AI Speed Reader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #000000;
+        }
+
+        /* Top and Bottom visual gradient fade mask */
+        .fade-mask {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+
+        /* Reading track guide line */
+        .reading-guide {
+            background: linear-gradient(180deg, rgba(99, 102, 241, 0.02) 0%, rgba(99, 102, 241, 0.08) 50%, rgba(99, 102, 241, 0.02) 100%);
+        }
+
+        /* Custom subtle scrollbar for PC/desktop */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #000000;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col antialiased bg-black text-slate-100">
+
+    <!-- HEADER -->
+    <header class="border-b border-zinc-900 bg-black px-4 sm:px-6 py-3 shrink-0">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-sm font-bold text-white tracking-wide">FlowReader <span class="text-xs font-normal text-indigo-400">AI</span></h1>
+                </div>
+            </div>
+            <div class="text-[11px] text-zinc-500 font-mono hidden sm:block">
+                返り読み防止・速読トレーニング
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="flex-1 overflow-hidden relative max-w-4xl lg:max-w-5xl w-full mx-auto p-3 sm:p-6 flex flex-col">
+
+        <!-- ==================== SETUP VIEW ==================== -->
+        <section id="setupView" class="flex-1 flex flex-col gap-4 sm:gap-5 overflow-y-auto pr-1">
+            
+            <!-- AI Passage Generator Section -->
+            <div class="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 sm:p-5 shadow-2xl">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 text-[10px] font-bold border border-indigo-500/30">5-LEVEL AI GENERATOR</span>
+                    <h2 class="text-xs sm:text-sm font-bold text-white">1. 入試レベルを指定してAIで英文生成</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- 5 Level Grid -->
+                    <div>
+                        <label class="text-[11px] sm:text-xs text-zinc-400 block mb-2 font-medium">難易度レベル</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                            <button type="button" data-level="1" class="level-btn active bg-indigo-600 border border-indigo-500 text-white font-medium py-2.5 px-2 rounded-xl text-xs transition text-center flex flex-col items-center gap-0.5 shadow-md">
+                                <span class="font-bold text-xs">Level 1</span>
+                                <span class="text-[10px] opacity-90 font-semibold">共通テスト</span>
+                            </button>
+                            <button type="button" data-level="2" class="level-btn bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 font-medium py-2.5 px-2 rounded-xl text-xs transition text-center flex flex-col items-center gap-0.5">
+                                <span class="font-bold text-xs">Level 2</span>
+                                <span class="text-[10px] opacity-70">同志社大</span>
+                            </button>
+                            <button type="button" data-level="3" class="level-btn bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 font-medium py-2.5 px-2 rounded-xl text-xs transition text-center flex flex-col items-center gap-0.5">
+                                <span class="font-bold text-xs">Level 3</span>
+                                <span class="text-[10px] opacity-70">大阪公立大</span>
+                            </button>
+                            <button type="button" data-level="4" class="level-btn bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 font-medium py-2.5 px-2 rounded-xl text-xs transition text-center flex flex-col items-center gap-0.5">
+                                <span class="font-bold text-xs text-indigo-300">Level 4</span>
+                                <span class="text-[10px] opacity-90 font-bold text-indigo-400">阪大</span>
+                            </button>
+                            <button type="button" data-level="5" class="level-btn col-span-2 sm:col-span-1 bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 font-medium py-2.5 px-2 rounded-xl text-xs transition text-center flex flex-col items-center gap-0.5">
+                                <span class="font-bold text-xs text-amber-400">Level 5</span>
+                                <span class="text-[10px] opacity-70 text-amber-300">阪大（医学部・外大）</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Topic Input & Generate Button -->
+                    <div class="flex flex-col sm:flex-row gap-2 pt-1">
+                        <input type="text" id="topicInput" class="flex-1 bg-black border border-zinc-800 rounded-xl px-3.5 py-2.5 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-indigo-500" placeholder="テーマ指定（任意: 例 Psychology, Artificial Intelligence, Philosophy）">
+                        <button id="generateAiBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0 shadow-lg shadow-indigo-600/20">
+                            <svg id="aiBtnSpinner" class="animate-spin -ml-1 mr-1 h-3.5 w-3.5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>AIで英文を自動生成</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Input Area -->
+            <div class="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 sm:p-5 shadow-2xl flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xs sm:text-sm font-bold text-white">2. 英文テキスト</h2>
+                    <button id="clearTextBtn" class="text-[11px] text-zinc-500 hover:text-zinc-300 underline">クリア</button>
+                </div>
+                
+                <textarea id="textInput" class="w-full flex-1 min-h-[140px] sm:min-h-[160px] bg-black border border-zinc-900 rounded-xl p-3.5 sm:p-4 text-zinc-200 text-xs sm:text-sm focus:outline-none focus:border-indigo-500 transition resize-none font-mono leading-relaxed" placeholder="ここに英文を入力するか、上の「AIで英文を自動生成」を押してください..."></textarea>
+                
+                <div class="flex justify-between items-center mt-2 text-[11px] sm:text-xs text-zinc-500 font-mono">
+                    <span id="wordCountLabel">総単語数: 0 words</span>
+                    <span id="estTimeLabel">想定時間: --</span>
+                </div>
+            </div>
+
+            <!-- Speed Controls & Start Button -->
+            <div class="bg-zinc-950 border border-zinc-900 rounded-2xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5">
+                <div class="flex justify-between items-center">
+                    <label for="wpmSlider" class="text-xs font-bold text-zinc-200">WPM</label>
+                    <span id="wpmDisplay" class="text-base sm:text-lg font-bold text-indigo-400 font-mono">200 <span class="text-xs font-normal text-zinc-500">WPM</span></span>
+                </div>
+                <input type="range" id="wpmSlider" min="100" max="500" step="10" value="200" class="w-full h-2 bg-black rounded-lg appearance-none cursor-pointer accent-indigo-500 border border-zinc-800">
+                <div class="flex justify-between text-[10px] text-zinc-500 font-mono">
+                    <span>100 (低速)</span>
+                    <span>200~250 (共通テスト)</span>
+                    <span>300+ (阪大・二次)</span>
+                </div>
+
+                <button id="startBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-600/30 transition active:scale-[0.99] flex items-center justify-center gap-2 text-xs sm:text-sm mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    スピードトレーニングを開始する
+                </button>
+            </div>
+
+        </section>
+
+        <!-- ==================== READER VIEW ==================== -->
+        <section id="readerView" class="hidden absolute inset-0 bg-black z-20 flex flex-col rounded-2xl overflow-hidden border border-zinc-900">
+            
+            <!-- Reader Header Bar -->
+            <div class="p-3 border-b border-zinc-900 bg-black flex items-center justify-between shrink-0 z-30">
+                <button id="backBtn" class="text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg border border-zinc-800 text-xs font-medium transition flex items-center gap-1.5 bg-zinc-950">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    設定に戻る
+                </button>
+
+                <!-- Live Speed Indicator (Static) -->
+                <div class="text-xs font-bold text-indigo-400 font-mono px-3 py-1 rounded bg-zinc-950 border border-zinc-900">
+                    <span id="liveWpmDisplay">200</span> <span class="text-[9px] font-normal text-zinc-500">WPM</span>
+                </div>
+            </div>
+
+            <!-- Reading Canvas Viewport -->
+            <div id="readingViewport" class="flex-1 relative overflow-hidden fade-mask bg-black">
+                
+                <!-- Central Reading Target Line -->
+                <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none h-28 border-y border-indigo-500/20 reading-guide z-10 flex items-center justify-between px-4">
+                    <div class="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-indigo-500/40"></div>
+                </div>
+
+                <!-- Vertical Moving Track -->
+                <div id="scrollTrack" class="absolute w-full px-4 sm:px-12 flex flex-col items-center text-center left-0 top-0 will-change-transform">
+                    <div id="textContent" class="max-w-2xl w-full text-xl sm:text-2xl md:text-3xl leading-relaxed font-medium text-slate-100 tracking-wide pt-16 pb-16">
+                        <!-- Passage text injected here -->
+                    </div>
+                </div>
+
+                <!-- Completion Modal Overlay -->
+                <div id="completionOverlay" class="hidden absolute inset-0 bg-black/90 backdrop-blur-sm z-40 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                    <div class="w-12 h-12 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <h3 class="text-base sm:text-lg font-bold text-white mb-1">トレーニング完了！</h3>
+                    <p class="text-xs text-zinc-400 mb-6">設定したスピードでの速読が完了しました。</p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+                        <button id="modalRestartBtn" class="flex-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-semibold py-2.5 px-4 rounded-xl transition">
+                            もう一度読む (再開)
+                        </button>
+                        <button id="modalReviewBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition shadow-lg shadow-indigo-600/30">
+                            次へ (全文確認)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Indicator Bar -->
+            <div class="w-full bg-zinc-950 h-1 z-30">
+                <div id="progressBar" class="bg-indigo-500 h-full w-0 transition-all duration-75"></div>
+            </div>
+
+            <!-- Reader Footer Bar -->
+            <div class="p-3 border-t border-zinc-900 bg-black flex items-center justify-between shrink-0 z-30">
+                <div class="text-xs text-zinc-500 font-mono">
+                    Reading...
+                </div>
+
+                <div class="text-xs text-zinc-500 font-mono text-right">
+                    <span id="progressPercent">0%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FULL TEXT REVIEW VIEW ==================== -->
+        <section id="fullTextView" class="hidden absolute inset-0 bg-black z-30 flex flex-col rounded-2xl border border-zinc-900 p-4 sm:p-6 overflow-hidden">
+            <div class="flex items-center justify-between pb-4 border-b border-zinc-900 shrink-0">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-white">全文確認・精読モード</h2>
+                    <p class="text-[11px] sm:text-xs text-zinc-400">速読した英文の全文です。構造解析や意味の確認にご活用ください。</p>
+                </div>
+                <button id="fullTextBackBtn" class="text-xs text-zinc-400 hover:text-white bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-lg transition">
+                    設定に戻る
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto my-4 pr-2">
+                <div id="fullTextContainer" class="text-base sm:text-lg md:text-xl text-slate-100 leading-relaxed font-sans space-y-6 select-text">
+                    <!-- Full text injected here -->
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-zinc-900 flex justify-between items-center shrink-0">
+                <span id="fullTextStats" class="text-[11px] sm:text-xs text-zinc-400 font-mono">--</span>
+                <button id="fullTextRetryBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-4 sm:px-5 py-2 rounded-xl text-xs transition shadow-lg shadow-indigo-600/20">
+                    もう一度速読する
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- LOGIC SCRIPT -->
+    <script>
+        // Standard high-quality offline passage bank for fallback across 5 levels
+        const PRESET_BANK = {
+            '1': [
+                `Many people believe that multi-tasking, such as listening to music while studying, can improve their overall efficiency. However, recent scientific studies in cognitive psychology suggest that the human brain is not actually designed to perform two complex tasks simultaneously. When we think we are doing two things at once, our brain is actually switching back and forth between the tasks at a high speed. This process, known as task-switching, requires a significant amount of mental energy and often leads to an increase in mistakes. Furthermore, research indicates that frequent task-switching can reduce a person's ability to focus deeply on important information over extended periods. Although working on multiple tasks at the same time might make us feel remarkably productive, it usually results in lower quality work and increased stress levels. Therefore, focusing on a single task with full concentration is still the most effective way to achieve high performance in both academic and professional environments.`
+            ],
+            '2': [
+                `In recent decades, urban planning has shifted dramatically toward sustainable resource management in response to accelerating climate changes. As municipal populations expand, the traditional model of relying on distant rural regions for food and energy transportation has proven environmentally unsustainable. Municipal regions are actively adopting integrated green infrastructure, including vertical hydroponic facilities and decentralized solar networks. These initiatives not only reduce the ecological footprint associated with long-distance logistics but also mitigate the urban heat island effect. Nevertheless, transitioning away from established infrastructural grids requires substantial municipal capital and public consensus. Urban theorists argue that the long-term socioeconomic benefits far outweigh these initial costs, paving the way for resilient future cities.`
+            ],
+            '3': [
+                `The concept of cultural autonomy is increasingly challenged by the rapid acceleration of digital communication networks. Historically, distinct cultural identities developed in relative geographical isolation, allowing unique linguistic nuances, ethical frameworks, and social conventions to flourish without immediate external disruption. In contemporary society, however, continuous digital interaction facilitates a constant exchange of ideas that frequently erodes local traditions while fostering hybrid cultural phenomena. Sociologists debate whether this global convergence threatens genuine diversity or enriches mutual human understanding. While critics contend that dominant commercial media formats impose passive consumerism across borders, defenders argue that individuals now possess unprecedented agency to synthesize disparate cultural elements. Ultimately, preserving distinct heritage while actively participating in modern global discourse represents one of the most intellectually demanding dilemmas of our era.`
+            ],
+            '4': [
+                `Modern economic theory increasingly incorporates empirical insights from behavioral science to rectify the systemic shortcomings of standard rational-agent models. Traditional macroeconomic paradigms long proceeded on the assumption that individuals execute optimized financial choices based on complete information and objective self-interest. Empirical cognitive research, however, reveals that human decision-making is systematically distorted by heuristic shortcuts, emotional states, and contextual framing. Phenomena such as loss aversion and present bias explain why consumers frequently prioritize immediate gratification over long-term socioeconomic security, even when fully cognizant of the adverse consequences. By embedding psychological realism into institutional policy design, economists can formulate subtle behavioral nudges that foster public welfare and environmental sustainability without infringing upon fundamental personal liberty.`
+            ],
+            '5': [
+                `The philosophical examination of technology demands that we scrutinize how artificial artifacts reconfigure the fundamental conditions of human consciousness and social organization. Rather than functioning as morally neutral instruments that merely amplify human physical capabilities, sophisticated technological systems actively structure our spatial-temporal perception and dictate our cognitive engagement with reality. The ubiquitous delegation of decision-making to algorithmic protocols, for instance, subtly transfers epistemic agency from human moral judgment to computational efficiency. As automated systems expand into judicial, medical, and existential domains, profound questions emerge regarding accountability, moral responsibility, and the potential atrophy of critical human autonomy. Addressing these existential challenges requires an uncompromisingly rigorous interdisciplinary inquiry that synthesizes historical philosophy, ethical theory, and advanced scientific practice.`
+            ]
+        };
+
+        const DEFAULT_PASSAGE = PRESET_BANK['1'][0];
+
+        // App State
+        let selectedLevel = '1';
+        let wpm = 200;
+        let isPlaying = false;
+        let isCompleted = false;
+        let animationFrameId = null;
+        let lastTimestamp = 0;
+        let currentY = 0;
+        let totalScrollDistance = 0;
+        let totalWords = 0;
+        let pixelsPerSecond = 0;
+        let viewportHeight = 0;
+
+        // DOM References
+        const setupView = document.getElementById('setupView');
+        const readerView = document.getElementById('readerView');
+        const fullTextView = document.getElementById('fullTextView');
+        const completionOverlay = document.getElementById('completionOverlay');
+
+        const textInput = document.getElementById('textInput');
+        const topicInput = document.getElementById('topicInput');
+        const generateAiBtn = document.getElementById('generateAiBtn');
+        const aiBtnSpinner = document.getElementById('aiBtnSpinner');
+        const clearTextBtn = document.getElementById('clearTextBtn');
+        const wordCountLabel = document.getElementById('wordCountLabel');
+        const estTimeLabel = document.getElementById('estTimeLabel');
+        const wpmSlider = document.getElementById('wpmSlider');
+        const wpmDisplay = document.getElementById('wpmDisplay');
+        const liveWpmDisplay = document.getElementById('liveWpmDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const backBtn = document.getElementById('backBtn');
+
+        const readingViewport = document.getElementById('readingViewport');
+        const scrollTrack = document.getElementById('scrollTrack');
+        const textContent = document.getElementById('textContent');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+
+        const modalRestartBtn = document.getElementById('modalRestartBtn');
+        const modalReviewBtn = document.getElementById('modalReviewBtn');
+        const fullTextContainer = document.getElementById('fullTextContainer');
+        const fullTextBackBtn = document.getElementById('fullTextBackBtn');
+        const fullTextRetryBtn = document.getElementById('fullTextRetryBtn');
+        const fullTextStats = document.getElementById('fullTextStats');
+
+        // Set Default Text
+        textInput.value = DEFAULT_PASSAGE;
+        updateWordCount();
+
+        // Level Button Selection Event
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.level-btn').forEach(b => {
+                    b.classList.remove('active', 'bg-indigo-600', 'border-indigo-500', 'text-white', 'shadow-md');
+                    b.classList.add('bg-zinc-900', 'border-zinc-800', 'text-zinc-300');
+                });
+                btn.classList.add('active', 'bg-indigo-600', 'border-indigo-500', 'text-white', 'shadow-md');
+                btn.classList.remove('bg-zinc-900', 'border-zinc-800', 'text-zinc-300');
+                selectedLevel = btn.dataset.level;
+            });
+        });
+
+        // AI Generation Logic using Gemini API
+        async function generatePassageWithGemini() {
+            const topic = topicInput.value.trim();
+
+            generateAiBtn.disabled = true;
+            aiBtnSpinner.classList.remove('hidden');
+            generateAiBtn.querySelector('span').textContent = 'AI生成中...';
+
+            let generatedText = null;
+
+            try {
+                let levelDescription = "";
+                if (selectedLevel === '1') {
+                    levelDescription = "Japanese Common Test (共通テスト) entrance exam level. Clear academic style, CEFR B1 vocabulary, straightforward clause structures. Target length: ~180 words.";
+                } else if (selectedLevel === '2') {
+                    levelDescription = "Doshisha University (同志社大学) level. Upper-private entrance exam level, CEFR B1+-B2 vocabulary, moderate clause complexity and logical structure. Target length: ~190 words.";
+                } else if (selectedLevel === '3') {
+                    levelDescription = "Osaka Metropolitan University (大阪公立大学) level. Upper academic tone, embedded clauses, CEFR B2 vocabulary. Target length: ~200 words.";
+                } else if (selectedLevel === '4') {
+                    levelDescription = "Osaka University (阪大) standard entrance exam level. High academic rigor, abstract argumentation, dense sentence syntax with embedded dependent clauses, sophisticated CEFR B2+ academic vocabulary. Target length: ~220 words.";
+                } else if (selectedLevel === '5') {
+                    levelDescription = "Osaka University (阪大) Medical / Foreign Language Faculty level. Uncompromising, highly demanding academic passage, intricate nested clauses, abstract concepts, precise CEFR C1 vocabulary. Target length: ~240 words.";
+                }
+
+                const systemPrompt = `You are a strict, top-tier English test author specializing in Japanese national university entrance exams, with particular emphasis on Osaka University (阪大).
+CRITICAL RULE: DO NOT simplify vocabulary or sentence structures. Replicate the authentic syntax, abstract depth, and stylistic rigor matching the exact requested level.
+Return ONLY raw English paragraph text with NO titles, NO markdown formatting, NO quotes, and NO introductory remarks.`;
+
+                const userQuery = `Write an authentic academic English reading passage for Level ${selectedLevel}.\nSpecification: ${levelDescription}\n${topic ? `Topic/Theme: ${topic}` : 'Topic: An intriguing academic, scientific, or philosophical dilemma.'}`;
+
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: userQuery }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                }
+            } catch (err) {
+                console.warn('Gemini API call fell back to preset passage bank:', err);
+            }
+
+            if (!generatedText) {
+                const bank = PRESET_BANK[selectedLevel] || PRESET_BANK['1'];
+                const randomIndex = Math.floor(Math.random() * bank.length);
+                generatedText = bank[randomIndex];
+            }
+
+            if (generatedText) {
+                textInput.value = generatedText.trim();
+                updateWordCount();
+            }
+
+            generateAiBtn.disabled = false;
+            aiBtnSpinner.classList.add('hidden');
+            generateAiBtn.querySelector('span').textContent = 'AIで英文を自動生成';
+        }
+
+        generateAiBtn.addEventListener('click', generatePassageWithGemini);
+
+        // Word Count and Time Calculation
+        textInput.addEventListener('input', updateWordCount);
+        clearTextBtn.addEventListener('click', () => {
+            textInput.value = '';
+            updateWordCount();
+        });
+
+        wpmSlider.addEventListener('input', (e) => {
+            wpm = parseInt(e.target.value);
+            updateSpeedDisplays();
+            recalculateSpeed();
+            updateWordCount();
+        });
+
+        function updateSpeedDisplays() {
+            wpmDisplay.innerHTML = `${wpm} <span class="text-xs font-normal text-zinc-500">WPM</span>`;
+            liveWpmDisplay.textContent = wpm;
+        }
+
+        function updateWordCount() {
+            const rawText = textInput.value.trim();
+            const words = rawText ? rawText.split(/\s+/) : [];
+            totalWords = words.length;
+            wordCountLabel.textContent = `総単語数: ${totalWords} words`;
+
+            if (totalWords > 0) {
+                const totalSeconds = Math.round((totalWords / wpm) * 60);
+                const mins = Math.floor(totalSeconds / 60);
+                const secs = totalSeconds % 60;
+                estTimeLabel.textContent = `想定時間: ${mins > 0 ? mins + '分' : ''}${secs}秒`;
+            } else {
+                estTimeLabel.textContent = `想定時間: --`;
+            }
+        }
+
+        // Reader View Initialization & Start
+        startBtn.addEventListener('click', () => {
+            const text = textInput.value.trim();
+            if (!text) return;
+
+            setupView.classList.add('hidden');
+            fullTextView.classList.add('hidden');
+            readerView.classList.remove('hidden');
+
+            setTimeout(() => {
+                setupReaderView(text);
+                startReading();
+            }, 50);
+        });
+
+        backBtn.addEventListener('click', stopAndReturn);
+
+        function stopAndReturn() {
+            pauseReading();
+            readerView.classList.add('hidden');
+            fullTextView.classList.add('hidden');
+            completionOverlay.classList.add('hidden');
+            setupView.classList.remove('hidden');
+        }
+
+        function setupReaderView(text) {
+            textContent.innerHTML = '';
+            isCompleted = false;
+            completionOverlay.classList.add('hidden');
+
+            const paragraphs = text.split(/\n+/);
+            paragraphs.forEach(pText => {
+                if (pText.trim().length > 0) {
+                    const p = document.createElement('p');
+                    p.className = 'mb-10 leading-relaxed font-sans text-slate-100 tracking-wide';
+                    p.innerText = pText.trim();
+                    textContent.appendChild(p);
+                }
+            });
+
+            viewportHeight = readingViewport.clientHeight || 400;
+            const contentHeight = textContent.offsetHeight || 200;
+
+            totalScrollDistance = viewportHeight + contentHeight;
+            currentY = viewportHeight;
+            scrollTrack.style.transform = `translate3d(0, ${currentY}px, 0)`;
+
+            recalculateSpeed();
+
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+        }
+
+        function recalculateSpeed() {
+            if (totalWords === 0 || totalScrollDistance === 0) return;
+            const totalDurationSeconds = (totalWords / wpm) * 60;
+            pixelsPerSecond = totalScrollDistance / totalDurationSeconds;
+        }
+
+        // Frame-by-frame Animation Loop
+        function animationStep(timestamp) {
+            if (!isPlaying) return;
+
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaTime = (timestamp - lastTimestamp) / 1000;
+            lastTimestamp = timestamp;
+
+            currentY -= pixelsPerSecond * deltaTime;
+            scrollTrack.style.transform = `translate3d(0, ${currentY}px, 0)`;
+
+            const traveled = viewportHeight - currentY;
+            const progressRatio = Math.min(1.0, Math.max(0, traveled / totalScrollDistance));
+            const progressPct = Math.round(progressRatio * 100);
+
+            progressBar.style.width = `${progressPct}%`;
+            progressPercent.textContent = `${progressPct}%`;
+
+            if (currentY > -textContent.offsetHeight) {
+                animationFrameId = requestAnimationFrame(animationStep);
+            } else {
+                // Reading finished
+                pauseReading();
+                isCompleted = true;
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                completionOverlay.classList.remove('hidden');
+            }
+        }
+
+        function startReading() {
+            if (isCompleted) {
+                resetToStart();
+            }
+
+            if (isPlaying) return;
+            isPlaying = true;
+
+            lastTimestamp = 0;
+            animationFrameId = requestAnimationFrame(animationStep);
+        }
+
+        function pauseReading() {
+            isPlaying = false;
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        function resetToStart() {
+            pauseReading();
+            isCompleted = false;
+            completionOverlay.classList.add('hidden');
+            currentY = viewportHeight;
+            scrollTrack.style.transform = `translate3d(0, ${currentY}px, 0)`;
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+        }
+
+        modalRestartBtn.addEventListener('click', () => {
+            resetToStart();
+            startReading();
+        });
+
+        // Full Text Review Mode
+        function openFullTextReview() {
+            pauseReading();
+            completionOverlay.classList.add('hidden');
+            readerView.classList.add('hidden');
+            fullTextView.classList.remove('hidden');
+
+            const text = textInput.value.trim();
+            fullTextContainer.innerHTML = '';
+
+            const paragraphs = text.split(/\n+/);
+            paragraphs.forEach(pText => {
+                if (pText.trim().length > 0) {
+                    const p = document.createElement('p');
+                    p.className = 'text-slate-100 leading-relaxed font-sans text-base sm:text-lg tracking-wide mb-6';
+                    p.innerText = pText.trim();
+                    fullTextContainer.appendChild(p);
+                }
+            });
+
+            fullTextStats.textContent = `総単語数: ${totalWords} words | 設定スピード: ${wpm} WPM`;
+        }
+
+        modalReviewBtn.addEventListener('click', openFullTextReview);
+        fullTextBackBtn.addEventListener('click', stopAndReturn);
+        fullTextRetryBtn.addEventListener('click', () => {
+            fullTextView.classList.add('hidden');
+            readerView.classList.remove('hidden');
+            resetToStart();
+            startReading();
+        });
+
+        // Global Keydown (Escape to exit)
+        document.addEventListener('keydown', (e) => {
+            if (readerView.classList.contains('hidden')) return;
+
+            if (e.code === 'Escape') {
+                stopAndReturn();
+            }
+        });
+    </script>
+</body>
+</html>
